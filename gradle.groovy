@@ -88,7 +88,7 @@ if (pipelineType == 'CI'){
         if (env.PSTAGE == env.STAGE_NAME || env.PSTAGE == 'ALL') {         
             figlet 'Download Nexus'            
             STAGE = env.STAGE_NAME
-            sh "curl -X GET -u 'admin:koba' http://localhost:8082/repository/pipeline-devops-labm3/com/devopsusach2020/DevOpsUsach2020/0.0.1/DevOpsUsach2020-0.0.1.jar -O"
+            sh "curl -X GET -u 'admin:koba' http://10.69.166.130:8082/repository/pipeline-devops-labm3/com/devopsusach2020/DevOpsUsach2020/0.0.1/DevOpsUsach2020-0.0.1.jar -O"
             sh "echo ${env.WORKSPACE}"
             //sh "mv DevOpsUsach2020-0.0.1.jar DevOpsUsach2020-1.0.1.jar"
             sh "ls -ltr"
