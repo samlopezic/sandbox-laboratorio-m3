@@ -84,7 +84,7 @@ if (pipelineType == 'CI'){
         }
     }
     
-    stage('nexusDownload'){
+    /*stage('nexusDownload'){
         if (env.PSTAGE == env.STAGE_NAME || env.PSTAGE == 'ALL') {         
             figlet 'Download Nexus'            
             STAGE = env.STAGE_NAME
@@ -109,10 +109,12 @@ if (pipelineType == 'CI'){
             sh "curl -X GET 'http://localhost:8081/rest/mscovid/test?msg=testing'"
         }
     }
+    */
 
     stage('gitMergeMain') {
         STAGE = env.STAGE_NAME
         figlet "Stage: ${env.STAGE_NAME}"
+        merge("${env.GIT_LOCAL_BRANCH}", 'main')
         // def git = new helpers.Git()
         // git.merge("${env.GIT_LOCAL_BRANCH}", 'main')
 
@@ -121,6 +123,7 @@ if (pipelineType == 'CI'){
     stage('gitMergeDevelop') {
         STAGE = env.STAGE_NAME
         figlet "Stage: ${env.STAGE_NAME}"
+        merge("${env.GIT_LOCAL_BRANCH}", 'develop')
         // def git = new helpers.Git()
         // git.merge("${env.GIT_LOCAL_BRANCH}", 'develop')
 
@@ -129,6 +132,7 @@ if (pipelineType == 'CI'){
     stage('gitTagMaster') {
         STAGE = env.STAGE_NAME
         figlet "Stage: ${env.STAGE_NAME}"
+        tag("${env.GIT_LOCAL_BRANCH}",'main')
         // def git = new helpers.Git()
         // git.tag("${env.GIT_LOCAL_BRANCH}",'main')
     }
@@ -167,10 +171,21 @@ def merge(String ramaOrigen, String ramaDestino){
 	checkout(ramaOrigen)
 	checkout(ramaDestino)
 
-	sh """
-		git merge ${ramaOrigen}
-		git push origin ${ramaDestino}
-	"""
+    withCredentials([usernamePassword(
+      
+      credentialsId: 'pat_webhook_jenkins_work',
+      passwordVariable: 'TOKEN',
+      usernameVariable: 'USER')]) {
+
+        sh "git merge --verbose ${ramaOrigen}"
+      
+        def repoURLToken = "https://" +'${TOKEN}' + "@" + "${GIT_URL}".split('https://')[1]
+
+        sh 'git push --verbose ' +'https://' + '${TOKEN}'+ '@' + "${GIT_URL}".split('https://')[1] + " ${ramaDestino}"
+
+    }
+
+	
 }
 
 def tag(String ramaOrigen, String ramaDestino){
@@ -179,10 +194,21 @@ def tag(String ramaOrigen, String ramaDestino){
 	if (ramaOrigen.contains('release-v')){
 		checkout(ramaDestino)
 		def tagValue = ramaOrigen.split('release-')[1]
-		sh """
-			git tag ${tagValue}
-			git push origin ${tagValue}
-		"""
+
+        withCredentials([usernamePassword(
+      
+            credentialsId: 'pat_webhook_jenkins_work',
+            passwordVariable: 'TOKEN',
+            usernameVariable: 'USER')]) {
+
+                sh "git tag ${tagValue}"
+            
+                def repoURLToken = "https://" +'${TOKEN}' + "@" + "${GIT_URL}".split('https://')[1]
+
+                sh 'git push --verbose ' +'https://' + '${TOKEN}'+ '@' + "${GIT_URL}".split('https://')[1] + " ${tagValue}"
+
+        }
+
 
 	} else {
 		error "La rama ${ramaOrigen} no cumple con nomenclatura definida para rama release (release-v(major)-(minor)-(patch))."
@@ -190,7 +216,19 @@ def tag(String ramaOrigen, String ramaDestino){
 }
 
 def checkout(String rama){
-	sh "git reset --hard HEAD; git checkout ${rama}; git pull origin ${rama}"
+    withCredentials([usernamePassword(
+      
+      credentialsId: 'pat_webhook_jenkins_work',
+      passwordVariable: 'TOKEN',
+      usernameVariable: 'USER')]) {
+
+        sh "git reset --hard HEAD"
+        sh "git checkout ${rama}"
+      
+        def repoURLToken = "https://" +'${TOKEN}' + "@" + "${GIT_URL}".split('https://')[1]
+      
+        sh 'git pull --verbose --no-rebase ' +'https://' + '${TOKEN}'+ '@' + "${GIT_URL}".split('https://')[1] + " ${rama}"
+    }
 }
 
 
