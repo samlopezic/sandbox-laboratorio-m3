@@ -109,6 +109,29 @@ if (pipelineType == 'CI'){
             sh "curl -X GET 'http://localhost:8081/rest/mscovid/test?msg=testing'"
         }
     }
+
+    stage('nexuscd') {
+        if (env.PSTAGE == env.STAGE_NAME || env.PSTAGE == 'ALL') {         
+            figlet 'NexusCD' 
+            STAGE = env.STAGE_NAME
+            nexusPublisher nexusInstanceId: 'nexus',
+            nexusRepositoryId: 'pipeline-devops-labm3',
+            packages: [
+                        [
+                            $class: 'MavenPackage',
+                            mavenAssetList: [
+                            [classifier: '', extension: '', filePath: "${env.WORKSPACE}/DevOpsUsach2020-1.0.0.jar"]
+                            ],
+                            mavenCoordinate: [
+                            artifactId: 'DevOpsUsach2020',
+                            groupId: 'com.devopsusach2020',
+                            packaging: 'jar',
+                            version: '1.0.0'
+                            ]
+                        ]
+                    ]
+        }
+    }
     
 
     stage('gitMergeMain') {
@@ -137,30 +160,7 @@ if (pipelineType == 'CI'){
         // git.tag("${env.GIT_LOCAL_BRANCH}",'main')
     }
     
-    /* stage('nexuscd') {
-        if (env.PSTAGE == env.STAGE_NAME || env.PSTAGE == 'ALL') {         
-            figlet 'NexusCD' 
-            STAGE = env.STAGE_NAME
-            sh 'env'
-            println "Stage: ${env.STAGE_NAME}"    
-            nexusPublisher nexusInstanceId: 'nexus',
-            nexusRepositoryId: 'pipeline-devops-labm3',
-            packages: [
-                        [
-                            $class: 'MavenPackage',
-                            mavenAssetList: [
-                            [classifier: '', extension: '', filePath: "${env.WORKSPACE}/DevOpsUsach2020-1.0.1.jar"]
-                            ],
-                            mavenCoordinate: [
-                            artifactId: 'DevOpsUsach2020',
-                            groupId: 'com.devopsusach2020',
-                            packaging: 'jar',
-                            version: '1.0.1'
-                            ]
-                        ]
-                    ]
-        }
-    } */    
+         
 } 
 
 }
@@ -168,26 +168,9 @@ if (pipelineType == 'CI'){
 
 def diff(String ramaOrigen, String ramaDestino){
 	println "Este método realiza un diff de ${ramaOrigen} y ${ramaDestino}"
-
 	checkout(ramaOrigen)
 	checkout(ramaDestino)
     sh "git diff ${ramaOrigen} ${ramaDestino}"
-
-    /*withCredentials([usernamePassword(
-      
-      credentialsId: 'pat_webhook_jenkins_work',
-      passwordVariable: 'TOKEN',
-      usernameVariable: 'USER')]) {
-
-        
-      
-        def repoURLToken = "https://" +'${TOKEN}' + "@" + "${GIT_URL}".split('https://')[1]
-
-        sh 'git push --verbose ' +'https://' + '${TOKEN}'+ '@' + "${GIT_URL}".split('https://')[1] + " ${ramaDestino}"
-
-    }*/
-
-	
 }
 
 def merge(String ramaOrigen, String ramaDestino){
