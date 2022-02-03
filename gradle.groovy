@@ -80,15 +80,15 @@ if (pipelineType == 'CI'){
         if (env.PSTAGE == env.STAGE_NAME || env.PSTAGE == 'ALL') {         
             figlet env.STAGE_NAME            
             STAGE = env.STAGE_NAME
-            
+            diff('main', "${env.GIT_LOCAL_BRANCH}")
         }
     }
     
-    /*stage('nexusDownload'){
+    stage('nexusDownload'){
         if (env.PSTAGE == env.STAGE_NAME || env.PSTAGE == 'ALL') {         
             figlet 'Download Nexus'            
             STAGE = env.STAGE_NAME
-            sh "curl -X GET -u 'admin:koba' http://10.69.166.130:8082/repository/pipeline-devops-labm3/com/devopsusach2020/DevOpsUsach2020/0.0.1/DevOpsUsach2020-0.0.1.jar -O"
+            sh "curl -X GET -u 'admin:koba' http://localhost:8082/repository/pipeline-devops-labm3/com/devopsusach2020/DevOpsUsach2020/0.0.1/DevOpsUsach2020-0.0.1.jar -O"
             sh "echo ${env.WORKSPACE}"
             //sh "mv DevOpsUsach2020-0.0.1.jar DevOpsUsach2020-1.0.1.jar"
             sh "ls -ltr"
@@ -109,7 +109,7 @@ if (pipelineType == 'CI'){
             sh "curl -X GET 'http://localhost:8081/rest/mscovid/test?msg=testing'"
         }
     }
-    */
+    
 
     stage('gitMergeMain') {
         STAGE = env.STAGE_NAME
@@ -136,6 +136,7 @@ if (pipelineType == 'CI'){
         // def git = new helpers.Git()
         // git.tag("${env.GIT_LOCAL_BRANCH}",'main')
     }
+    
     /* stage('nexuscd') {
         if (env.PSTAGE == env.STAGE_NAME || env.PSTAGE == 'ALL') {         
             figlet 'NexusCD' 
@@ -164,6 +165,30 @@ if (pipelineType == 'CI'){
 
 }
 
+
+def diff(String ramaOrigen, String ramaDestino){
+	println "Este método realiza un diff de ${ramaOrigen} y ${ramaDestino}"
+
+	checkout(ramaOrigen)
+	checkout(ramaDestino)
+    sh "git diff ${ramaOrigen} ${ramaDestino}"
+
+    /*withCredentials([usernamePassword(
+      
+      credentialsId: 'pat_webhook_jenkins_work',
+      passwordVariable: 'TOKEN',
+      usernameVariable: 'USER')]) {
+
+        
+      
+        def repoURLToken = "https://" +'${TOKEN}' + "@" + "${GIT_URL}".split('https://')[1]
+
+        sh 'git push --verbose ' +'https://' + '${TOKEN}'+ '@' + "${GIT_URL}".split('https://')[1] + " ${ramaDestino}"
+
+    }*/
+
+	
+}
 
 def merge(String ramaOrigen, String ramaDestino){
 	println "Este método realiza un merge ${ramaOrigen} y ${ramaDestino}"
